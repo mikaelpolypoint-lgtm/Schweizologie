@@ -82,7 +82,7 @@ class CitySign extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          "${city.population > 0 ? '${(city.population / 1000).toStringAsFixed(1)}k inhabitants' : ''}",
+                          "${city.canton} • ${city.population > 0 ? '${(city.population / 1000).toStringAsFixed(1)}k' : ''}",
                           style: const TextStyle(
                             color: Colors.black87,
                             fontSize: 12,
