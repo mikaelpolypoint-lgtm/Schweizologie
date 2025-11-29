@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../models/city.dart';
 import '../models/high_score.dart';
@@ -9,9 +10,13 @@ enum GameState { loading, playing, gameOver, error }
 
 enum Direction {
   north,
+  northEast,
   east,
+  southEast,
   south,
+  southWest,
   west,
+  northWest,
 }
 
 class GameProvider with ChangeNotifier {
@@ -76,45 +81,98 @@ class GameProvider with ChangeNotifier {
     return city;
   }
 
-  Future<bool> makeGuess(Direction direction) async {
+  double _calculateBearing(double startLat, double startLng, double endLat, double endLng) {
+    var startLatRad = startLat * (pi / 180.0);
+    var startLngRad = startLng * (pi / 180.0);
+    var endLatRad = endLat * (pi / 180.0);
+    var endLngRad = endLng * (pi / 180.0);
+
+    var dLng = endLngRad - startLngRad;
+
+    var y = sin(dLng) * cos(endLatRad);
+    var x = cos(startLatRad) * sin(endLatRad) -
+        sin(startLatRad) * cos(endLatRad) * cos(dLng);
+
+    var bearingRad = atan2(y, x);
+    var bearingDegrees = bearingRad * (180.0 / pi);
+
+    return (bearingDegrees + 360) % 360;
+  }
+
+  Future<bool> makeGuess(Direction guess) async {
     if (_cityA == null || _cityB == null) return false;
 
-    // Determine valid directions based on relative position
-    // We accept ANY direction that is factually true.
-    // e.g. If City B is North-East of City A, both North and East are correct.
-    
+    double bearing = _calculateBearing(_cityA!.latitude, _cityA!.longitude,
+        _cityB!.latitude, _cityB!.longitude);
+
+    // Normalize bearing to 0-360
+    if (bearing < 0) bearing += 360;
+
     bool isCorrect = false;
+    int pointsAwarded = 0;
+
+    // Cardinal Directions (1 Point, +/- 45 degrees tolerance)
+    // North: 315-45
+    // East: 45-135
+    // South: 135-225
+    // West: 225-315
     
-    switch (direction) {
+    // Intercardinal Directions (3 Points, +/- 22.5 degrees tolerance)
+    // NE: 22.5 - 67.5
+    // SE: 112.5 - 157.5
+    // SW: 202.5 - 247.5
+    // NW: 292.5 - 337.5
+
+    switch (guess) {
       case Direction.north:
-        isCorrect = _cityB!.latitude > _cityA!.latitude;
-        break;
-      case Direction.south:
-        isCorrect = _cityB!.latitude < _cityA!.latitude;
+        isCorrect = (bearing >= 315 || bearing <= 45);
+        pointsAwarded = 1;
         break;
       case Direction.east:
-        isCorrect = _cityB!.longitude > _cityA!.longitude;
+        isCorrect = (bearing >= 45 && bearing <= 135);
+        pointsAwarded = 1;
+        break;
+      case Direction.south:
+        isCorrect = (bearing >= 135 && bearing <= 225);
+        pointsAwarded = 1;
         break;
       case Direction.west:
-        isCorrect = _cityB!.longitude < _cityA!.longitude;
+        isCorrect = (bearing >= 225 && bearing <= 315);
+        pointsAwarded = 1;
+        break;
+        
+      case Direction.northEast:
+        isCorrect = (bearing >= 22.5 && bearing <= 67.5);
+        pointsAwarded = 3;
+        break;
+      case Direction.southEast:
+        isCorrect = (bearing >= 112.5 && bearing <= 157.5);
+        pointsAwarded = 3;
+        break;
+      case Direction.southWest:
+        isCorrect = (bearing >= 202.5 && bearing <= 247.5);
+        pointsAwarded = 3;
+        break;
+      case Direction.northWest:
+        isCorrect = (bearing >= 292.5 && bearing <= 337.5);
+        pointsAwarded = 3;
         break;
     }
     
-    print("Guess: $direction, Correct? $isCorrect (A: ${_cityA!.name}, B: ${_cityB!.name})");
+    print("Guess: $guess, Correct? $isCorrect (A: ${_cityA!.name}, B: ${_cityB!.name})");
 
     if (isCorrect) {
-      _score++;
-      notifyListeners();
-      return true;
+      _score += pointsAwarded;
     } else {
       try {
         await _endGame();
       } catch (e) {
-        print("Error in _endGame: $e");
-        // Even if saving score fails, we should return false to show the popup
+        print("Error ending game: $e");
       }
-      return false;
     }
+    
+    notifyListeners();
+    return isCorrect;
   }
 
   void nextRound() {

@@ -92,15 +92,16 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFFF0000), // Swiss Red
-            primary: const Color(0xFFFF0000),
-            secondary: const Color(0xFFFFFFFF),
-            background: const Color(0xFFF5F5F5),
+            seedColor: const Color(0xFFD52B1E), // Swiss Red
+            primary: const Color(0xFFD52B1E),
+            secondary: const Color(0xFF2D3436), // Dark Slate
+            background: const Color(0xFFF0EAD6), // Cream
+            surface: const Color(0xFFF0EAD6),
           ),
-          textTheme: GoogleFonts.interTextTheme(
+          textTheme: GoogleFonts.montserratTextTheme(
             Theme.of(context).textTheme,
           ),
-          scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+          scaffoldBackgroundColor: const Color(0xFFF0EAD6),
         ),
         home: const AuthWrapper(),
       ),
