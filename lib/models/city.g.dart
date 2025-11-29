@@ -12,9 +12,10 @@ City _$CityFromJson(Map<String, dynamic> json) => City(
       canton: json['canton'] as String,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
-      population: (json['population'] as num).toInt(),
-      areaSqKm: (json['area_sq_km'] as num).toDouble(),
-      flagUrl: json['flag_url'] as String,
+      population: (json['population'] as num?)?.toInt() ?? 0,
+      municipality: json['municipality'] as String? ?? '',
+      postalCode: json['postal_code'] as String? ?? '',
+      flagUrl: json['flag_url'] as String? ?? '',
     );
 
 Map<String, dynamic> _$CityToJson(City instance) => <String, dynamic>{
@@ -24,6 +25,7 @@ Map<String, dynamic> _$CityToJson(City instance) => <String, dynamic>{
       'latitude': instance.latitude,
       'longitude': instance.longitude,
       'population': instance.population,
-      'area_sq_km': instance.areaSqKm,
+      'municipality': instance.municipality,
+      'postal_code': instance.postalCode,
       'flag_url': instance.flagUrl,
     };

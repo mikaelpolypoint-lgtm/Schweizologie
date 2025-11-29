@@ -5,6 +5,7 @@ import '../providers/game_provider.dart';
 import '../models/city.dart';
 import '../services/firebase_service.dart';
 import 'game_over_screen.dart';
+import '../import_cities.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -59,10 +60,33 @@ class _GameScreenState extends State<GameScreen> {
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () async {
-                        Provider.of<FirebaseService>(context, listen: false).signOut();
+                        try {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Uploading cities... Please wait.")),
+                          );
+                          await importCitiesFromAssets();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Upload complete! Reloading...")),
+                          );
+                          if (context.mounted) {
+                            Provider.of<GameProvider>(context, listen: false).initGame();
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Upload failed: $e"), backgroundColor: Colors.red),
+                          );
+                        }
                       },
-                      icon: const Icon(Icons.logout),
-                      label: const Text("Go to Login"),
+                      icon: const Icon(Icons.cloud_upload),
+                      label: const Text("Upload Cities to Firestore"),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Provider.of<GameProvider>(context, listen: false).initGame();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text("Retry"),
                     ),
                   ],
                 ),

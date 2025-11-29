@@ -34,8 +34,8 @@ Future<List<City>> loadCitiesFromAssets() async {
         final lat = double.tryParse(parts[2].trim()) ?? 0.0;
         final lng = double.tryParse(parts[3].trim()) ?? 0.0;
         final pop = int.tryParse(parts[4].trim()) ?? 0;
-        final area = double.tryParse(parts[5].trim()) ?? 0.0;
-        final flag = parts.length > 6 ? parts[6].trim() : '';
+        final municipality = parts.length > 5 ? parts[5].trim() : '';
+        final postalCode = parts.length > 6 ? parts[6].trim() : '';
 
         // Create City object (ID is temporary/random for local use)
         cities.add(City(
@@ -45,8 +45,8 @@ Future<List<City>> loadCitiesFromAssets() async {
           latitude: lat,
           longitude: lng,
           population: pop,
-          areaSqKm: area,
-          flagUrl: flag,
+          municipality: municipality,
+          postalCode: postalCode,
         ));
       } catch (e) {
         print("Error parsing line $i: $e");
@@ -67,14 +67,28 @@ Future<void> importCitiesFromAssets() async {
   if (cities.isEmpty) return;
 
   final firestore = FirebaseFirestore.instance;
+  
+  // 1. Delete existing cities
+  print("Deleting existing cities...");
+  final existing = await firestore.collection('cities').get();
+  final deleteBatch = firestore.batch();
+  for (final doc in existing.docs) {
+    deleteBatch.delete(doc.reference);
+  }
+  await deleteBatch.commit();
+  print("Deleted ${existing.docs.length} existing cities.");
+
+  // 2. Upload new cities
   var batch = firestore.batch();
   int batchCount = 0;
+  int totalUploaded = 0;
 
   for (final city in cities) {
     final docRef = firestore.collection('cities').doc(); 
     batch.set(docRef, city.toJson());
     
     batchCount++;
+    totalUploaded++;
     if (batchCount >= 400) {
       await batch.commit();
       print("Committed batch of $batchCount...");
@@ -86,5 +100,5 @@ Future<void> importCitiesFromAssets() async {
   if (batchCount > 0) {
     await batch.commit();
   }
-  print("Upload finished.");
+  print("Upload finished. Total uploaded: $totalUploaded");
 }

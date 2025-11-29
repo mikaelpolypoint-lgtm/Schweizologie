@@ -26,7 +26,6 @@ void main() async {
   measurementId: "G-09G11BX17F"
         ),
       );
-    } else {
       await Firebase.initializeApp();
     }
   } catch (e) {
@@ -114,20 +113,8 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firebaseService = Provider.of<FirebaseService>(context, listen: false);
-    return StreamBuilder(
-      stream: firebaseService.authStateChanges,
-      builder: (context, snapshot) {
-        print("Auth State Changed: ${snapshot.connectionState}, Has Data: ${snapshot.hasData}, User: ${snapshot.data?.email}");
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        } else if (snapshot.hasData) {
-          return const GameScreen();
-        } else {
-          return const LoginScreen();
-        }
-      },
-    );
+    // Directly return GameScreen to bypass login
+    return const GameScreen();
   }
 }
 

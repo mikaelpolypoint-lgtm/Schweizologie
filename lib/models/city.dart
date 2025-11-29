@@ -10,8 +10,9 @@ class City {
   final double latitude;
   final double longitude;
   final int population;
-  @JsonKey(name: 'area_sq_km')
-  final double areaSqKm;
+  final String municipality;
+  @JsonKey(name: 'postal_code')
+  final String postalCode;
   @JsonKey(name: 'flag_url')
   final String flagUrl;
 
@@ -21,9 +22,10 @@ class City {
     required this.canton,
     required this.latitude,
     required this.longitude,
-    required this.population,
-    required this.areaSqKm,
-    required this.flagUrl,
+    this.population = 0,
+    this.municipality = '',
+    this.postalCode = '',
+    this.flagUrl = '',
   });
 
   factory City.fromJson(Map<String, dynamic> json) => _$CityFromJson(json);
