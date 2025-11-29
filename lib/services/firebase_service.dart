@@ -89,22 +89,33 @@ class FirebaseService {
   }
 
   // Firestore - Scores
-  Future<void> saveScore(int score) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+  // Firestore - Scores
+  Future<void> saveScore(String userName, int score) async {
+    User? user = _auth.currentUser;
+    
+    if (user == null) {
+      try {
+        print("User not signed in. Attempting anonymous sign-in...");
+        final userCredential = await _auth.signInAnonymously();
+        user = userCredential.user;
+        print("Anonymous sign-in successful: ${user?.uid}");
+      } catch (e) {
+        print("Anonymous sign-in failed: $e");
+        // Continue anyway, maybe rules allow unauthenticated writes
+      }
+    }
 
     try {
       // Save to global highscores collection
       await _firestore.collection('highscores').add({
-        'userId': user.uid,
-        'userName': user.displayName ?? user.email ?? 'Anonymous',
+        'userId': user?.uid ?? 'anonymous',
+        'userName': userName,
         'score': score,
         'timestamp': FieldValue.serverTimestamp(),
       });
-      
-      // We could also keep a user-specific history if needed, but the requirement focuses on "the highscore list".
     } catch (e) {
       print('Error saving score: $e');
+      rethrow; // Propagate error to trigger timeout handling in provider
     }
   }
 
@@ -113,7 +124,7 @@ class FirebaseService {
       final snapshot = await _firestore
           .collection('highscores')
           .orderBy('score', descending: true)
-          .limit(100)
+          .limit(20)
           .get();
 
       return snapshot.docs.map((doc) => HighScore.fromFirestore(doc)).toList();

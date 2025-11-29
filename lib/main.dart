@@ -26,7 +26,6 @@ void main() async {
   measurementId: "G-09G11BX17F"
         ),
       );
-      await Firebase.initializeApp();
     }
   } catch (e) {
     print("Firebase Initialization Error: $e");

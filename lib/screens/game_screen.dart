@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../models/city.dart';
+import '../models/high_score.dart';
+import '../services/firebase_service.dart';
 import '../import_cities.dart';
 import '../widgets/contour_map_background.dart';
 import '../widgets/city_sign.dart';
@@ -95,6 +97,7 @@ class _GameScreenState extends State<GameScreen> {
               return SafeArea(
                 child: Column(
                   children: [
+
                     _buildHeader(game.score),
                     Expanded(
                       child: KeyboardListener(
@@ -229,6 +232,8 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+
+
   Widget _buildHeader(int score) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -254,20 +259,120 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD52B1E),
-              borderRadius: BorderRadius.circular(4),
-              boxShadow: const [BoxShadow(color: Colors.black26, offset: Offset(0, 2), blurRadius: 4)],
-            ),
-            child: Text(
-              'SCORE: $score',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.0),
-            ),
+          Row(
+            children: [
+              // High Scores Button
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFFD52B1E), width: 2),
+                  boxShadow: const [BoxShadow(color: Colors.black12, offset: Offset(0, 2), blurRadius: 4)],
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.emoji_events, color: Color(0xFFD52B1E)),
+                  tooltip: 'High Scores',
+                  onPressed: () => _showHighScoresDialog(context),
+                ),
+              ),
+              // Score Display
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD52B1E),
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: const [BoxShadow(color: Colors.black26, offset: Offset(0, 2), blurRadius: 4)],
+                ),
+                child: Text(
+                  'SCORE: $score',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  void _showHighScoresDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF0EAD6),
+          title: const Text(
+            "TOP 20 HIGH SCORES",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFD52B1E)),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: FutureBuilder<List<HighScore>>(
+              future: Provider.of<FirebaseService>(context, listen: false).getTopHighScores(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFFD52B1E)));
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+                final scores = snapshot.data ?? [];
+                if (scores.isEmpty) {
+                  return const Center(child: Text("No high scores yet!"));
+                }
+                return ListView.separated(
+                  itemCount: scores.length,
+                  separatorBuilder: (context, index) => const Divider(color: Colors.black12),
+                  itemBuilder: (context, index) {
+                    final score = scores[index];
+                    // Format date: DD.MM.YYYY
+                    final date = score.timestamp != null 
+                        ? "${score.timestamp!.day.toString().padLeft(2, '0')}.${score.timestamp!.month.toString().padLeft(2, '0')}.${score.timestamp!.year}" 
+                        : "-";
+                    
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: index < 3 ? const Color(0xFFFFD100) : Colors.white,
+                        foregroundColor: Colors.black,
+                        child: Text("#${index + 1}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      title: Text(
+                        score.userName,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(date),
+                      trailing: Text(
+                        "${score.score}",
+                        style: const TextStyle(
+                          color: Color(0xFFD52B1E),
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD52B1E),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                child: const Text("CLOSE"),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -357,45 +462,124 @@ class _GameScreenState extends State<GameScreen> {
       });
     } else {
       // Wrong Answer
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text("Leider Falsch", textAlign: TextAlign.center),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.cancel, color: Colors.red, size: 64),
-              const SizedBox(height: 16),
-              Text(
-                "Final Score: ${game.score}",
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Rank: #${game.getRank()}",
-                style: const TextStyle(fontSize: 18, color: Colors.grey),
+      if (game.isHighScore(game.score)) {
+        // High Score Dialog
+        final TextEditingController nameController = TextEditingController();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => StatefulBuilder(
+            builder: (context, setState) {
+              bool isSubmitting = false;
+
+              return AlertDialog(
+                backgroundColor: const Color(0xFFF0EAD6),
+                title: const Text(
+                  "NEW HIGH SCORE!",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFD52B1E)),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.emoji_events, color: Color(0xFFFFD100), size: 64),
+                    const SizedBox(height: 16),
+                    Text(
+                      "You reached Rank #${game.getRank()}!",
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text("Enter your name:"),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: nameController,
+                      enabled: !isSubmitting,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  Center(
+                    child: isSubmitting
+                        ? const CircularProgressIndicator(color: Color(0xFFD52B1E))
+                        : ElevatedButton(
+                            onPressed: () async {
+                              if (nameController.text.isNotEmpty) {
+                                setState(() {
+                                  isSubmitting = true;
+                                });
+                                try {
+                                  await game.submitHighScore(nameController.text);
+                                } catch (e) {
+                                  // Ignore error, just close
+                                  print("Submit failed: $e");
+                                }
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                  game.restartGame();
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFD52B1E),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                            ),
+                            child: const Text("OK"),
+                          ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      } else {
+        // Standard Game Over Dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFFF0EAD6),
+            title: const Text("GAME OVER", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cancel, color: Color(0xFFD52B1E), size: 64),
+                const SizedBox(height: 16),
+                Text(
+                  "Final Score: ${game.score}",
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Rank: #${game.getRank()}",
+                  style: const TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    game.restartGame();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD52B1E),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  ),
+                  child: const Text("Try Again"),
+                ),
               ),
             ],
           ),
-          actions: [
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  game.restartGame();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD52B1E),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text("Try Again"),
-              ),
-            ),
-          ],
-        ),
-      );
+        );
+      }
     }
   }
 }

@@ -187,13 +187,28 @@ class GameProvider with ChangeNotifier {
   // List<HighScore> get highScores => _highScores; // This getter is now redundant as it's defined at the top.
 
   Future<void> _endGame() async {
-    // We don't set GameState.gameOver anymore, because we want to show a popup on the GameScreen.
     try {
-      await _firebaseService.saveScore(_score).timeout(const Duration(seconds: 2));
-      _highScores = await _firebaseService.getTopHighScores().timeout(const Duration(seconds: 2));
+      // Fetch high scores to see if user qualifies
+      _highScores = await _firebaseService.getTopHighScores().timeout(const Duration(seconds: 10));
     } catch (e) {
-      print("Error saving score or fetching high scores: $e");
-      // Fallback: just keep local high scores or empty list
+      print("Error fetching high scores: $e");
+    }
+    notifyListeners();
+  }
+
+  bool isHighScore(int score) {
+    if (_highScores.length < 20) return true;
+    return score > _highScores.last.score;
+  }
+
+  Future<void> submitHighScore(String name) async {
+    try {
+      await _firebaseService.saveScore(name, _score).timeout(const Duration(seconds: 15));
+      // Refresh high scores
+      _highScores = await _firebaseService.getTopHighScores().timeout(const Duration(seconds: 15));
+    } catch (e) {
+      print("Error submitting high score: $e");
+      rethrow; // Let the UI know it failed
     }
     notifyListeners();
   }
