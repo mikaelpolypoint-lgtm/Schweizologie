@@ -1,0 +1,31 @@
+name,canton,latitude,longitude,population,area_sq_km,flag_url
+Zurich,ZH,47.3744,8.5411,447082,87.88,https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Wappen_Z%C3%BCrich_matt.svg/1200px-Wappen_Z%C3%BCrich_matt.svg.png
+Geneva,GE,46.2017,6.1469,203840,15.93,https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Wappen_Genf_matt.svg/1200px-Wappen_Genf_matt.svg.png
+Basel,BS,47.5547,7.5906,173552,23.85,https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Wappen_Basel-Stadt_matt.svg/1200px-Wappen_Basel-Stadt_matt.svg.png
+Lausanne,VD,46.5198,6.6335,141418,41.38,https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Wappen_Lausanne_matt.svg/1200px-Wappen_Lausanne_matt.svg.png
+Bern,BE,46.9481,7.4475,134506,51.62,https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Wappen_Bern_matt.svg/1200px-Wappen_Bern_matt.svg.png
+Winterthur,ZH,47.4989,8.7286,109775,67.93,https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Wappen_Winterthur_matt.svg/1200px-Wappen_Winterthur_matt.svg.png
+Lucerne,LU,47.0500,8.3000,81691,29.11,https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Wappen_Luzern_matt.svg/1200px-Wappen_Luzern_matt.svg.png
+Sankt Gallen,SG,47.4242,9.3708,75833,39.38,https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Wappen_St._Gallen_matt.svg/1200px-Wappen_St._Gallen_matt.svg.png
+Lugano,TI,46.0100,8.9600,63185,75.8,https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Wappen_Lugano_matt.svg/1200px-Wappen_Lugano_matt.svg.png
+Biel/Bienne,BE,47.1333,7.2500,55159,21.19,https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Wappen_Biel_Bienne_matt.svg/1200px-Wappen_Biel_Bienne_matt.svg.png
+Thun,BE,46.7667,7.6333,43734,21.57,https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Wappen_Thun_matt.svg/1200px-Wappen_Thun_matt.svg.png
+Bellinzona,TI,46.1954,9.0297,43785,164.8,https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Wappen_Bellinzona_matt.svg/1200px-Wappen_Bellinzona_matt.svg.png
+Koniz,BE,46.9167,7.3917,42240,51.01,https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Wappen_Koeniz_matt.svg/1200px-Wappen_Koeniz_matt.svg.png
+La Chaux-de-Fonds,NE,47.1000,6.8290,37942,71.08,https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Wappen_La_Chaux-de-Fonds_matt.svg/1200px-Wappen_La_Chaux-de-Fonds_matt.svg.png
+Fribourg,FR,46.8000,7.1500,38365,9.32,https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Wappen_Freiburg_matt.svg/1200px-Wappen_Freiburg_matt.svg.png
+Uster,ZH,47.3500,8.7167,36791,28.56,https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Wappen_Uster_matt.svg/1200px-Wappen_Uster_matt.svg.png
+Schaffhausen,SH,47.7000,8.6333,36587,31.84,https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Wappen_Schaffhausen_matt.svg/1200px-Wappen_Schaffhausen_matt.svg.png
+Chur,GR,46.8500,9.5333,35038,28.01,https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Wappen_Chur_matt.svg/1200px-Wappen_Chur_matt.svg.png
+Vernier,GE,46.2000,6.1000,34774,7.66,https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Wappen_Vernier_matt.svg/1200px-Wappen_Vernier_matt.svg.png
+Sion,VS,46.2311,7.3594,34708,125.66,https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Wappen_Sion_matt.svg/1200px-Wappen_Sion_matt.svg.png
+Neuchatel,NE,47.0000,6.9333,33475,27.05,https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Wappen_Neuenburg_matt.svg/1200px-Wappen_Neuenburg_matt.svg.png
+Lancy,GE,46.1833,6.1167,32841,4.82,https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Wappen_Lancy_matt.svg/1200px-Wappen_Lancy_matt.svg.png
+Baden,AG,47.4667,8.3000,32566,13.17,https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Wappen_Baden_matt.svg/1200px-Wappen_Baden_matt.svg.png
+Emmen,LU,47.0833,8.3000,30926,20.37,https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Wappen_Emmen_matt.svg/1200px-Wappen_Emmen_matt.svg.png
+Zug,ZG,47.1681,8.5169,30542,33.8,https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Wappen_Zug_matt.svg/1200px-Wappen_Zug_matt.svg.png
+Olten,SO,47.3500,7.9000,30678,11.49,https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Wappen_Olten_matt.svg/1200px-Wappen_Olten_matt.svg.png
+Yverdon-les-Bains,VD,46.7785,6.6408,30157,13.53,https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Wappen_Yverdon-les-Bains_matt.svg/1200px-Wappen_Yverdon-les-Bains_matt.svg.png
+Dubendorf,ZH,47.4167,8.6167,29907,13.62,https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Wappen_D%C3%BCbendorf_matt.svg/1200px-Wappen_D%C3%BCbendorf_matt.svg.png
+Dietikon,ZH,47.4000,8.4000,28057,9.88,https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Wappen_Dietikon_matt.svg/1200px-Wappen_Dietikon_matt.svg.png
+Kriens,LU,47.0167,8.2667,27441,27.31,https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Wappen_Kriens_matt.svg/1200px-Wappen_Kriens_matt.svg.png

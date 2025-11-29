@@ -1,0 +1,172 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'providers/game_provider.dart';
+import 'screens/game_screen.dart';
+import 'services/firebase_service.dart';
+import 'import_cities.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    if (kIsWeb) {
+      // TODO: Replace with your actual Firebase Web Config from Firebase Console
+      // Go to Project Settings -> General -> Your apps -> Web App -> SDK setup and configuration
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: "AIzaSyC2wfr0TzaXRTREJzcAxZtySJUVZ2xOey8",
+  authDomain: "schweizologie.firebaseapp.com",
+  projectId: "schweizologie",
+  storageBucket: "schweizologie.firebasestorage.app",
+  messagingSenderId: "221742944714",
+  appId: "1:221742944714:web:1106bdb033749ab3243f33",
+  measurementId: "G-09G11BX17F"
+        ),
+      );
+    } else {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    print("Firebase Initialization Error: $e");
+    runApp(ErrorApp(error: e.toString()));
+    return;
+  }
+  
+  runApp(const MyApp());
+}
+
+class ErrorApp extends StatelessWidget {
+  final String error;
+  const ErrorApp({super.key, required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                const SizedBox(height: 16),
+                const Text(
+                  'Firebase Initialization Failed',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'If you are running on Web, you must provide your Firebase Config in lib/main.dart.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.grey[200],
+                  child: Text(error, style: const TextStyle(fontFamily: 'monospace')),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => GameProvider()),
+        Provider(create: (_) => FirebaseService()),
+      ],
+      child: MaterialApp(
+        title: 'Schweizologie',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFFFF0000), // Swiss Red
+            primary: const Color(0xFFFF0000),
+            secondary: const Color(0xFFFFFFFF),
+            background: const Color(0xFFF5F5F5),
+          ),
+          textTheme: GoogleFonts.interTextTheme(
+            Theme.of(context).textTheme,
+          ),
+          scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+        ),
+        home: const AuthWrapper(),
+      ),
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final firebaseService = Provider.of<FirebaseService>(context, listen: false);
+    return StreamBuilder(
+      stream: firebaseService.authStateChanges,
+      builder: (context, snapshot) {
+        print("Auth State Changed: ${snapshot.connectionState}, Has Data: ${snapshot.hasData}, User: ${snapshot.data?.email}");
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        } else if (snapshot.hasData) {
+          return const GameScreen();
+        } else {
+          return const LoginScreen();
+        }
+      },
+    );
+  }
+}
+
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Schweizologie',
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {
+                Provider.of<FirebaseService>(context, listen: false).signInWithGoogle();
+              },
+              icon: Image.network(
+                'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                height: 24,
+              ),
+              label: const Text('Sign in with Google'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
