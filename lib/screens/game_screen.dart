@@ -8,6 +8,7 @@ import '../services/firebase_service.dart';
 import '../import_cities.dart';
 import '../widgets/contour_map_background.dart';
 import '../widgets/city_sign.dart';
+import '../widgets/swiss_map_painter.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -496,11 +497,123 @@ class _GameScreenState extends State<GameScreen> {
         }
       });
     } else {
-      // Wrong Answer
+      // Wrong Answer - Game Over
+      
+      // 1. Show Journey / Game Over Dialog
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFFF0EAD6),
+          title: const Text("GAME OVER", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cancel, color: Color(0xFFD52B1E), size: 48),
+                const SizedBox(height: 8),
+                Text(
+                  "Final Score: ${game.score}",
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "Rank: #${game.getRank()}",
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                
+                // Explanation
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.black12),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "You guessed: ${_directionToString(game.lastGuessedDirection)}",
+                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Correct: ${_directionToString(game.correctDirection)}",
+                        style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${game.cityA?.name} ➔ ${game.cityB?.name}",
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Map Visualization
+                const Text("Your Journey:", style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.black26),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: AspectRatio(
+                      aspectRatio: 1.56,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Silhouette Map Background
+                          Opacity(
+                            opacity: 0.2,
+                            child: Image.asset(
+                              'assets/switzerland_silhouette.png',
+                              fit: BoxFit.fill,
+                              errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.map, color: Colors.grey)),
+                            ),
+                          ),
+                          // Path Overlay
+                          CustomPaint(
+                            painter: SwissMapPainter(visitedCities: game.visitedCities),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close Journey Dialog
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD52B1E),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                child: const Text("Next"),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      // 2. Check for High Score AFTER Journey Dialog closes
       if (game.isHighScore(game.score)) {
         // High Score Dialog
         final TextEditingController nameController = TextEditingController();
-        showDialog(
+        if (!context.mounted) return;
+        
+        await showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => StatefulBuilder(
@@ -550,12 +663,10 @@ class _GameScreenState extends State<GameScreen> {
                                 try {
                                   await game.submitHighScore(nameController.text);
                                 } catch (e) {
-                                  // Ignore error, just close
                                   print("Submit failed: $e");
                                 }
                                 if (context.mounted) {
                                   Navigator.of(context).pop();
-                                  game.restartGame();
                                 }
                               }
                             },
@@ -572,49 +683,25 @@ class _GameScreenState extends State<GameScreen> {
             },
           ),
         );
-      } else {
-        // Standard Game Over Dialog
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFFF0EAD6),
-            title: const Text("GAME OVER", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.cancel, color: Color(0xFFD52B1E), size: 64),
-                const SizedBox(height: 16),
-                Text(
-                  "Final Score: ${game.score}",
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Rank: #${game.getRank()}",
-                  style: const TextStyle(fontSize: 18, color: Colors.grey),
-                ),
-              ],
-            ),
-            actions: [
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    game.restartGame();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD52B1E),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  ),
-                  child: const Text("Try Again"),
-                ),
-              ),
-            ],
-          ),
-        );
       }
+      
+      // 3. Restart Game
+      game.restartGame();
+    }
+  }
+
+
+  String _directionToString(Direction? d) {
+    if (d == null) return "-";
+    switch (d) {
+      case Direction.north: return "North";
+      case Direction.northEast: return "North-East";
+      case Direction.east: return "East";
+      case Direction.southEast: return "South-East";
+      case Direction.south: return "South";
+      case Direction.southWest: return "South-West";
+      case Direction.west: return "West";
+      case Direction.northWest: return "North-West";
     }
   }
 }

@@ -28,12 +28,25 @@ class GameProvider with ChangeNotifier {
   int _score = 0;
   GameState _gameState = GameState.loading;
   List<HighScore> _highScores = [];
+  
+  // History tracking
+  final List<City> _visitedCities = [];
+  
+  // Wrong guess details
+  double? _lastBearing;
+  Direction? _lastGuessedDirection;
+  Direction? _correctDirection;
 
   City? get cityA => _cityA;
   City? get cityB => _cityB;
   int get score => _score;
   GameState get gameState => _gameState;
   List<HighScore> get highScores => _highScores;
+  List<City> get visitedCities => _visitedCities;
+  
+  double? get lastBearing => _lastBearing;
+  Direction? get lastGuessedDirection => _lastGuessedDirection;
+  Direction? get correctDirection => _correctDirection;
 
   final Random _random = Random();
 
@@ -67,9 +80,22 @@ class GameProvider with ChangeNotifier {
 
   void _startNewGame() {
     _score = 0;
+    _visitedCities.clear();
     _cityA = _getRandomCity();
+    _visitedCities.add(_cityA!); // Add start city
     _cityB = _getRandomCity(exclude: _cityA);
     _gameState = GameState.playing;
+    notifyListeners();
+  }
+
+  // ... (keep existing methods)
+
+  void nextRound() {
+    print("nextRound called. Old A: ${_cityA?.name}, Old B: ${_cityB?.name}");
+    _cityA = _cityB; // City B becomes City A
+    _visitedCities.add(_cityA!); // Add new city to history
+    _cityB = _getRandomCity(exclude: _cityA);
+    print("New A: ${_cityA?.name}, New B: ${_cityB?.name}");
     notifyListeners();
   }
 
@@ -115,6 +141,17 @@ class GameProvider with ChangeNotifier {
     ).round();
   }
 
+  Direction _getDirectionFromBearing(double bearing) {
+    // Quadrant 1: North-East (0 to 90)
+    if (bearing >= 0 && bearing < 90) return Direction.northEast;
+    // Quadrant 2: South-East (90 to 180)
+    if (bearing >= 90 && bearing < 180) return Direction.southEast;
+    // Quadrant 3: South-West (180 to 270)
+    if (bearing >= 180 && bearing < 270) return Direction.southWest;
+    // Quadrant 4: North-West (270 to 360)
+    return Direction.northWest;
+  }
+
   Future<bool> makeGuess(Direction guess) async {
     if (_cityA == null || _cityB == null) return false;
 
@@ -126,60 +163,52 @@ class GameProvider with ChangeNotifier {
 
     bool isCorrect = false;
     int pointsAwarded = 0;
-
-    // Cardinal Directions (1 Point, +/- 45 degrees tolerance)
-    // North: 315-45
-    // East: 45-135
-    // South: 135-225
-    // West: 225-315
     
-    // Intercardinal Directions (3 Points, +/- 22.5 degrees tolerance)
-    // NE: 22.5 - 67.5
-    // SE: 112.5 - 157.5
-    // SW: 202.5 - 247.5
-    // NW: 292.5 - 337.5
+    // Determine the "True" direction (always an Intercardinal in this mode)
+    Direction trueDirection = _getDirectionFromBearing(bearing);
+    
+    // Determine valid guesses based on the True direction (Quadrant Logic)
+    final Set<Direction> validGuesses = {trueDirection};
+    
+    if (trueDirection == Direction.northEast) {
+      validGuesses.add(Direction.north);
+      validGuesses.add(Direction.east);
+    } else if (trueDirection == Direction.southEast) {
+      validGuesses.add(Direction.south);
+      validGuesses.add(Direction.east);
+    } else if (trueDirection == Direction.southWest) {
+      validGuesses.add(Direction.south);
+      validGuesses.add(Direction.west);
+    } else if (trueDirection == Direction.northWest) {
+      validGuesses.add(Direction.north);
+      validGuesses.add(Direction.west);
+    }
 
-    switch (guess) {
-      case Direction.north:
-        isCorrect = (bearing >= 315 || bearing <= 45);
+    // Check if the user's guess is valid
+    if (validGuesses.contains(guess)) {
+      isCorrect = true;
+      // Award points based on the TYPE of direction guessed (Risk/Reward)
+      if (guess == Direction.north || guess == Direction.east || guess == Direction.south || guess == Direction.west) {
         pointsAwarded = 1;
-        break;
-      case Direction.east:
-        isCorrect = (bearing >= 45 && bearing <= 135);
-        pointsAwarded = 1;
-        break;
-      case Direction.south:
-        isCorrect = (bearing >= 135 && bearing <= 225);
-        pointsAwarded = 1;
-        break;
-      case Direction.west:
-        isCorrect = (bearing >= 225 && bearing <= 315);
-        pointsAwarded = 1;
-        break;
-        
-      case Direction.northEast:
-        isCorrect = (bearing >= 22.5 && bearing <= 67.5);
+      } else {
         pointsAwarded = 3;
-        break;
-      case Direction.southEast:
-        isCorrect = (bearing >= 112.5 && bearing <= 157.5);
-        pointsAwarded = 3;
-        break;
-      case Direction.southWest:
-        isCorrect = (bearing >= 202.5 && bearing <= 247.5);
-        pointsAwarded = 3;
-        break;
-      case Direction.northWest:
-        isCorrect = (bearing >= 292.5 && bearing <= 337.5);
-        pointsAwarded = 3;
-        break;
+      }
+    } else {
+      isCorrect = false;
     }
     
-    print("Guess: $guess, Correct? $isCorrect (A: ${_cityA!.name}, B: ${_cityB!.name})");
+    print("Guess: $guess, True: $trueDirection");
+    print("Valid Answers: ${validGuesses.map((d) => d.toString().split('.').last).join(', ')}");
+    print("Result: $isCorrect (A: ${_cityA!.name}, B: ${_cityB!.name})");
 
     if (isCorrect) {
       _score += pointsAwarded;
     } else {
+      // Store details for Game Over screen
+      _lastBearing = bearing;
+      _lastGuessedDirection = guess;
+      _correctDirection = trueDirection;
+      
       try {
         await _endGame();
       } catch (e) {
@@ -191,13 +220,7 @@ class GameProvider with ChangeNotifier {
     return isCorrect;
   }
 
-  void nextRound() {
-    print("nextRound called. Old A: ${_cityA?.name}, Old B: ${_cityB?.name}");
-    _cityA = _cityB; // City B becomes City A
-    _cityB = _getRandomCity(exclude: _cityA);
-    print("New A: ${_cityA?.name}, New B: ${_cityB?.name}");
-    notifyListeners();
-  }
+
 
   // The old List<int> _highScores = []; definition was removed from the top.
   // This is the correct definition for List<HighScore>.
