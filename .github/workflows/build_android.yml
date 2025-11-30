@@ -1,4 +1,4 @@
-name: Build Android App
+name: Build Android App Bundle
 
 on:
   push:
@@ -27,11 +27,22 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Build APK
-      run: flutter build apk --release
+    - name: Decode Keystore
+      run: |
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
 
-    - name: Upload APK
+    - name: Create key.properties
+      run: |
+        echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
+        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+        echo "storeFile=upload-keystore.jks" >> android/key.properties
+
+    - name: Build App Bundle
+      run: flutter build appbundle --release
+
+    - name: Upload App Bundle
       uses: actions/upload-artifact@v4
       with:
-        name: app-release
-        path: build/app/outputs/flutter-apk/app-release.apk
+        name: app-release-bundle
+        path: build/app/outputs/bundle/release/app-release.aab
