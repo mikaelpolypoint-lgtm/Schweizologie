@@ -175,9 +175,39 @@ class _GameScreenState extends State<GameScreen> {
                             // Center: City A
                             Align(
                               alignment: Alignment.center,
-                              child: CitySign(
-                                city: game.cityA!,
-                                label: "Start",
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CitySign(
+                                    city: game.cityA!,
+                                    label: "Start",
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.black26),
+                                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.straighten, size: 16, color: Colors.black54),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          "${game.currentDistance} km",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
 
@@ -447,6 +477,11 @@ class _GameScreenState extends State<GameScreen> {
               Text(
                 "New Score: ${game.score}",
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "${game.cityA?.name} ➔ ${game.cityB?.name}",
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ],
           ),

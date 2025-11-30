@@ -99,6 +99,22 @@ class GameProvider with ChangeNotifier {
     return (bearingDegrees + 360) % 360;
   }
 
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const p = 0.017453292519943295; // Math.PI / 180
+    final a = 0.5 - cos((lat2 - lat1) * p)/2 +
+          cos(lat1 * p) * cos(lat2 * p) *
+          (1 - cos((lon2 - lon1) * p))/2;
+    return 12742 * asin(sqrt(a)); // 2 * R; R = 6371 km
+  }
+
+  int get currentDistance {
+    if (_cityA == null || _cityB == null) return 0;
+    return _calculateDistance(
+      _cityA!.latitude, _cityA!.longitude,
+      _cityB!.latitude, _cityB!.longitude
+    ).round();
+  }
+
   Future<bool> makeGuess(Direction guess) async {
     if (_cityA == null || _cityB == null) return false;
 
@@ -176,8 +192,10 @@ class GameProvider with ChangeNotifier {
   }
 
   void nextRound() {
+    print("nextRound called. Old A: ${_cityA?.name}, Old B: ${_cityB?.name}");
     _cityA = _cityB; // City B becomes City A
     _cityB = _getRandomCity(exclude: _cityA);
+    print("New A: ${_cityA?.name}, New B: ${_cityB?.name}");
     notifyListeners();
   }
 
