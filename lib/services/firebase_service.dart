@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/city.dart';
 import '../models/high_score.dart';
@@ -8,8 +7,6 @@ import '../models/high_score.dart';
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  // GoogleSignIn is only needed for Mobile. On Web we use FirebaseAuth directly.
-  // We avoid initializing it globally to prevent "ClientID not set" errors on Web.
 
   // Auth
   Future<void> handleRedirectResult() async {
@@ -28,45 +25,7 @@ class FirebaseService {
     }
   }
 
-  Future<User?> signInWithGoogle() async {
-    print("Attempting Google Sign-In...");
-    try {
-      // Web-specific flow
-      if (kIsWeb) {
-        print("Detected Web Platform. Using signInWithPopup.");
-        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-        final UserCredential userCredential = await _auth.signInWithPopup(googleProvider);
-        print("Popup Sign-In Successful! User: ${userCredential.user?.email}");
-        return userCredential.user; 
-      } else {
-        print("Detected Mobile Platform.");
-        // Mobile flow
-        final GoogleSignIn googleSignIn = GoogleSignIn();
-        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-        if (googleUser == null) {
-          print("Google Sign-In aborted by user.");
-          return null;
-        }
-
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-
-        final UserCredential userCredential = await _auth.signInWithCredential(credential);
-        return userCredential.user;
-      }
-    } catch (e) {
-      print('Error signing in with Google: $e');
-      return null;
-    }
-  }
-
   Future<void> signOut() async {
-    if (!kIsWeb) {
-      await GoogleSignIn().signOut();
-    }
     await _auth.signOut();
   }
 
