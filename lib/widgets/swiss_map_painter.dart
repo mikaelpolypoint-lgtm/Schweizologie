@@ -25,21 +25,42 @@ class SwissMapPainter extends CustomPainter {
       ..color = dotColor
       ..style = PaintingStyle.fill;
 
-    // Swiss Bounding Box (Tight Fit)
+    // Swiss Bounding Box
     const minLat = 45.82;
     const maxLat = 47.81;
     const minLng = 5.96;
     const maxLng = 10.50;
+    
+    // Calculate Aspect Ratio of the bounding box
+    // 1 deg Lat ~= 111km, 1 deg Lng (at 47N) ~= 75km
+    const latDist = (maxLat - minLat) * 111;
+    final lngDist = (maxLng - minLng) * 75;
+    final mapAspectRatio = lngDist / latDist;
+
+    // Determine drawing bounds to preserve aspect ratio
+    double drawWidth = size.width;
+    double drawHeight = size.height;
+    
+    if (size.width / size.height > mapAspectRatio) {
+      // Canvas is wider than map -> constrain width
+      drawWidth = size.height * mapAspectRatio;
+    } else {
+      // Canvas is taller than map -> constrain height
+      drawHeight = size.width / mapAspectRatio;
+    }
+
+    final double offsetX = (size.width - drawWidth) / 2;
+    final double offsetY = (size.height - drawHeight) / 2;
 
     Offset getOffset(City city) {
       // Normalize to 0..1 within the bounding box
       final normX = (city.longitude - minLng) / (maxLng - minLng);
       final normY = (city.latitude - minLat) / (maxLat - minLat);
       
-      // Map to full canvas size
+      // Map to centered drawing bounds
       // Invert Y because canvas Y grows downwards
-      final x = normX * size.width;
-      final y = size.height - (normY * size.height);
+      final x = offsetX + (normX * drawWidth);
+      final y = offsetY + (drawHeight - (normY * drawHeight));
       
       return Offset(x, y);
     }

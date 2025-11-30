@@ -563,25 +563,12 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: AspectRatio(
-                      aspectRatio: 1.56,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // Silhouette Map Background
-                          Opacity(
-                            opacity: 0.2,
-                            child: Image.asset(
-                              'assets/switzerland_silhouette.png',
-                              fit: BoxFit.fill,
-                              errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.map, color: Colors.grey)),
-                            ),
-                          ),
-                          // Path Overlay
-                          CustomPaint(
-                            painter: SwissMapPainter(visitedCities: game.visitedCities),
-                          ),
-                        ],
+                    child: Container(
+                      color: Colors.white,
+                      width: double.infinity,
+                      height: 200,
+                      child: CustomPaint(
+                        painter: SwissMapPainter(visitedCities: game.visitedCities),
                       ),
                     ),
                   ),
