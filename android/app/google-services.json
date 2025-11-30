@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "221742944714",
+    "project_id": "schweizologie",
+    "storage_bucket": "schweizologie.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:221742944714:android:d60ba7898ffa9f25243f33",
+        "android_client_info": {
+          "package_name": "com.mika.schweizologie"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "221742944714-prf7j0tt5r9mkh2iba09ot5q1h34ce2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwN2wlI10xwHM1nk8pe1I8QSgKgDkRx5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "221742944714-prf7j0tt5r9mkh2iba09ot5q1h34ce2k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
